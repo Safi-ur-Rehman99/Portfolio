@@ -7,6 +7,7 @@ import SiteNav from "@/components/SiteNav";
 import SectionLabelSwap from "@/components/SectionLabelSwap";
 import MagneticButton from "@/components/MagneticButton";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import KineticText from "@/components/KineticText";
 
 const LabsVisual = lazy(() => import("@/components/LabsVisual"));
 
@@ -63,8 +64,11 @@ function LabsPage() {
           </div>
           <div className="md:col-span-10">
             <Reveal>
-              <h1 className="display-hero">
-                Side<br />quests<span className="text-accent">.</span>
+              <h1 className="display-hero" aria-label="Side quests.">
+                <KineticText className="inline">Side</KineticText>
+                <br />
+                <KineticText className="inline">quests</KineticText>
+                <span className="text-accent">.</span>
               </h1>
             </Reveal>
             <Reveal delay={0.15}>

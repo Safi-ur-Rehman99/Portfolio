@@ -5,6 +5,7 @@ import SiteNav from "@/components/SiteNav";
 import AvailabilityDot from "@/components/AvailabilityDot";
 import SectionLabelSwap from "@/components/SectionLabelSwap";
 import MagneticButton from "@/components/MagneticButton";
+import KineticText from "@/components/KineticText";
 
 const EMAIL = "syedsafi3414@gmail.com";
 
@@ -63,9 +64,11 @@ function ContactPage() {
 
           <div className="md:col-span-10">
             <Reveal>
-              <h1 className="display-hero leading-[0.9]">
-                Tell me what<br />
-                you&apos;re building<span className="text-accent">.</span>
+              <h1 className="display-hero leading-[0.9]" aria-label="Let's build something worth shipping.">
+                <KineticText className="inline">Let&apos;s build something</KineticText>
+                <br />
+                <KineticText className="inline">worth shipping</KineticText>
+                <span className="text-accent">.</span>
               </h1>
             </Reveal>
             <Reveal delay={0.15}>

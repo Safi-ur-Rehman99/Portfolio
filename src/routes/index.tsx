@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { lazy, Suspense, useRef, useEffect } from "react";
+import { motion } from "framer-motion";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { projects } from "@/lib/projects";
@@ -8,12 +9,14 @@ import Reveal from "@/components/Reveal";
 import SiteNav from "@/components/SiteNav";
 import AvailabilityDot from "@/components/AvailabilityDot";
 import TextReveal from "@/components/TextReveal";
-import StickyProjectPanels from "@/components/StickyProjectPanels";
+import HorizontalProjectScroll from "@/components/HorizontalProjectScroll";
 import HorizontalLabsScroll from "@/components/HorizontalLabsScroll";
 import SectionLabelSwap from "@/components/SectionLabelSwap";
 import MagneticButton from "@/components/MagneticButton";
 import KineticText from "@/components/KineticText";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import EducationTimeline from "@/components/EducationTimeline";
+import CertificateStack from "@/components/CertificateStack";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -52,13 +55,59 @@ function Landing() {
       <Hero />
       <Statement />
       <WorkGateway />
+      <EducationSection />
+      <ExperienceSection />
+      <CertificatesSection />
       <LabsGateway />
-      <Background />
       <ContactCTA />
       <Footer />
     </div>
   );
 }
+
+// ─── Hero entrance variants ───────────────────────────────────────────────────
+const heroStagger = {
+  hidden: {},
+  visible: {
+    transition: { staggerChildren: 0.14, delayChildren: 0.6 },
+  },
+};
+
+const slideFromLeft = {
+  hidden: { x: -120, opacity: 0 },
+  visible: {
+    x: 0,
+    opacity: 1,
+    transition: { duration: 1.1, ease: [0.22, 1, 0.36, 1] },
+  },
+};
+
+const slideFromRight = {
+  hidden: { x: 120, opacity: 0 },
+  visible: {
+    x: 0,
+    opacity: 1,
+    transition: { duration: 1.1, ease: [0.22, 1, 0.36, 1] },
+  },
+};
+
+const slideFromBottom = {
+  hidden: { y: 60, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: { duration: 1, ease: [0.22, 1, 0.36, 1] },
+  },
+};
+
+const fadeScale = {
+  hidden: { scale: 1.18, opacity: 0 },
+  visible: {
+    scale: 1,
+    opacity: 1,
+    transition: { duration: 2.5, ease: [0.22, 1, 0.36, 1], delay: 0.2 },
+  },
+};
 
 function Hero() {
   const heroRef = useRef<HTMLElement>(null);
@@ -70,26 +119,28 @@ function Hero() {
     if (reduced || !heroRef.current || !textRef.current || !sceneRef.current) return;
 
     const ctx = gsap.context(() => {
-      // Parallax: text moves at 1× speed, 3D scene at 0.3×
-      gsap.to(textRef.current, {
-        y: -150,
+      // Parallax: the 3D scene is pinned with position:fixed behavior
+      // through translateY compensation — it scrolls at ~20% of normal speed
+      gsap.to(sceneRef.current, {
+        y: () => -(window.innerHeight * 0.15),
         ease: "none",
         scrollTrigger: {
           trigger: heroRef.current,
           start: "top top",
           end: "bottom top",
-          scrub: true,
+          scrub: 0.5,
         },
       });
 
-      gsap.to(sceneRef.current, {
-        y: -50,
+      // Text scrolls at a faster rate so it leaves the scene behind
+      gsap.to(textRef.current, {
+        y: () => -(window.innerHeight * 0.45),
         ease: "none",
         scrollTrigger: {
           trigger: heroRef.current,
           start: "top top",
           end: "bottom top",
-          scrub: true,
+          scrub: 0.5,
         },
       });
     }, heroRef);
@@ -99,7 +150,15 @@ function Hero() {
 
   return (
     <section ref={heroRef} className="relative min-h-screen overflow-hidden">
-      <div ref={sceneRef} className="pointer-events-auto absolute inset-0">
+      {/* 3D scene background — fades + scales in slowly to hide loading delay */}
+      <motion.div
+        ref={sceneRef}
+        className="pointer-events-auto absolute inset-0"
+        style={{ willChange: "transform" }}
+        variants={fadeScale}
+        initial="hidden"
+        animate="visible"
+      >
         <ErrorBoundary
           fallback={
             <div
@@ -125,65 +184,69 @@ function Hero() {
             <HeroScene />
           </Suspense>
         </ErrorBoundary>
-      </div>
+      </motion.div>
 
-      <div
+      {/* Text content — staggered entrance from different directions */}
+      <motion.div
         ref={textRef}
         className="pointer-events-none relative z-10 flex min-h-screen flex-col justify-between px-6 pt-32 pb-10 md:px-10 md:pt-40 md:pb-14"
+        style={{ willChange: "transform" }}
+        variants={heroStagger}
+        initial="hidden"
+        animate="visible"
       >
         <div className="grid gap-10 md:grid-cols-12">
-          <div className="md:col-span-2">
-            <Reveal>
-              <p className="eyebrow">Index 001</p>
-            </Reveal>
-          </div>
+          {/* Eyebrow — slides from left */}
+          <motion.div className="md:col-span-2" variants={slideFromLeft}>
+            <p className="eyebrow">Index 001</p>
+          </motion.div>
+
+          {/* Name — first line from left, second from right */}
           <div className="md:col-span-10">
             <h1 className="display-hero text-foreground">
-              <Reveal as="span" className="block">
+              <motion.span className="block" variants={slideFromLeft}>
                 <KineticText className="inline">Safi Ur</KineticText>
-              </Reveal>
-              <Reveal as="span" delay={0.1} className="block">
+              </motion.span>
+              <motion.span className="block" variants={slideFromRight}>
                 <KineticText className="inline">
                   Rehman
                 </KineticText>
                 <span className="text-accent">.</span>
-              </Reveal>
+              </motion.span>
             </h1>
           </div>
         </div>
 
         <div className="mt-16 grid gap-10 md:mt-0 md:grid-cols-12 md:items-end">
-          <div className="md:col-span-6 md:col-start-3">
-            <Reveal delay={0.25}>
-              <p className="max-w-md text-base leading-relaxed text-foreground/80 md:text-lg">
-                Full-stack developer in Lahore. I build MERN products that ship
-                to real users, and a few small things that exist only because I
-                got curious.
-              </p>
-              <div className="pointer-events-auto mt-6">
-                <AvailabilityDot label="Available — full-time & collaborations" />
-              </div>
-            </Reveal>
-          </div>
-          <div className="md:col-span-3 md:col-start-10 md:justify-self-end">
-            <Reveal delay={0.4}>
-              <MagneticButton>
-                <Link
-                  to="/work"
-                  data-cursor="hover"
-                  className="pointer-events-auto group inline-flex items-center gap-3 text-xs uppercase tracking-[0.22em] text-foreground"
-                >
-                  <span>Selected work</span>
-                  <span
-                    className="inline-block h-px w-10 bg-foreground transition-all duration-500 group-hover:w-16 group-hover:bg-accent"
-                    aria-hidden
-                  />
-                </Link>
-              </MagneticButton>
-            </Reveal>
-          </div>
+          {/* Bio — slides up from bottom */}
+          <motion.div className="md:col-span-6 md:col-start-3" variants={slideFromBottom}>
+            <p className="max-w-md text-base leading-relaxed text-foreground/80 md:text-lg">
+              Full-stack developer in Lahore. I build MERN products that ship
+              to real users, and a few small things that exist only because I
+              got curious.
+            </p>
+            <div className="pointer-events-auto mt-6">
+              <AvailabilityDot label="Available — full-time & collaborations" />
+            </div>
+          </motion.div>
+
+          {/* CTA — slides from right */}
+          <motion.div className="md:col-span-3 md:col-start-10 md:justify-self-end" variants={slideFromRight}>
+            <MagneticButton>
+              <Link
+                to="/work"
+                className="pointer-events-auto group inline-flex items-center gap-3 text-xs uppercase tracking-[0.22em] text-foreground"
+              >
+                <span>Selected work</span>
+                <span
+                  className="inline-block h-px w-10 bg-foreground transition-all duration-500 group-hover:w-16 group-hover:bg-accent"
+                  aria-hidden
+                />
+              </Link>
+            </MagneticButton>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
     </section>
   );
 }
@@ -212,35 +275,7 @@ function Statement() {
 
 function WorkGateway() {
   const featured = projects.slice(0, 3);
-  return (
-    <section id="work" className="border-t border-border">
-      <div className="grid grid-cols-12 items-baseline gap-4 px-6 py-10 md:px-10">
-        <div className="col-span-12 md:col-span-2">
-          <SectionLabelSwap
-            primary="B — Selected work"
-            secondary="three of them. more coming."
-          />
-        </div>
-        <p className="col-span-12 text-sm text-muted-foreground md:col-span-6 md:col-start-3">
-          A curated index. Hover to glimpse, click through for the full list.
-        </p>
-        <div className="col-span-12 md:col-span-3 md:justify-self-end">
-          <MagneticButton>
-            <Link
-              to="/work"
-              data-cursor="hover"
-              className="group inline-flex items-center gap-3 text-xs uppercase tracking-[0.22em] text-foreground"
-            >
-              <span>All work</span>
-              <span className="inline-block h-px w-10 bg-foreground transition-all duration-500 group-hover:w-20 group-hover:bg-accent" />
-            </Link>
-          </MagneticButton>
-        </div>
-      </div>
-
-      <StickyProjectPanels items={featured} />
-    </section>
-  );
+  return <HorizontalProjectScroll items={featured} />;
 }
 
 function LabsGateway() {
@@ -266,71 +301,130 @@ function LabsGateway() {
   );
 }
 
-function Background() {
+// ─── Education (vertical timeline) ────────────────────────────────────────────
+function EducationSection() {
   return (
     <section className="border-t border-border px-6 py-32 md:px-10 md:py-48">
-      <div className="mx-auto grid max-w-7xl gap-16 md:grid-cols-12">
-        <div className="md:col-span-2">
-          <SectionLabelSwap
-            primary="D — Background"
-            secondary="where I've been."
-          />
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-20 md:grid md:grid-cols-12">
+          <div className="md:col-span-2">
+            <SectionLabelSwap
+              primary="D — Education"
+              secondary="the path so far."
+            />
+          </div>
+          <div className="mt-4 md:col-span-5 md:col-start-3 md:mt-0">
+            <Reveal>
+              <h2 className="font-display text-3xl leading-tight tracking-tight md:text-4xl">
+                Three institutions,<br />
+                <span className="text-muted-foreground">one direction.</span>
+              </h2>
+            </Reveal>
+          </div>
         </div>
 
-        <div className="md:col-span-5">
-          <Reveal>
-            <p className="eyebrow mb-6">Internship</p>
-            <h3 className="font-display text-3xl leading-tight tracking-tight md:text-4xl">
-              Web Developer Intern
-              <br />
-              <span className="text-muted-foreground">
-                Software Productivity Strategists
-              </span>
-            </h3>
-            <p className="mt-2 text-xs uppercase tracking-[0.22em] text-muted-foreground">
-              July — September 2025
-            </p>
-            <p className="mt-8 max-w-md text-base leading-relaxed text-foreground/80">
-              Shipped to a live production site in React and Tailwind. Rebuilt
-              static sections into animated, interactive ones. Applied SEO
-              practice across the codebase.
-            </p>
-          </Reveal>
+        <EducationTimeline />
+      </div>
+    </section>
+  );
+}
+
+// ─── Experience ───────────────────────────────────────────────────────────────
+function ExperienceSection() {
+  return (
+    <section className="border-t border-border px-6 py-32 md:px-10 md:py-48">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-16 md:grid md:grid-cols-12">
+          <div className="md:col-span-2">
+            <SectionLabelSwap
+              primary="E — Experience"
+              secondary="where I've worked."
+            />
+          </div>
         </div>
 
-        <div className="md:col-span-5">
-          <Reveal delay={0.1}>
-            <p className="eyebrow mb-6">Education</p>
+        <Reveal>
+          <div className="group relative overflow-hidden border border-border bg-card transition-colors duration-500 hover:border-accent/40">
+            {/* Accent glow on hover */}
+            <div
+              className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+              style={{
+                background:
+                  "radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255,91,31,0.06), transparent 40%)",
+              }}
+            />
 
-            <div>
-              <h3 className="font-display text-3xl leading-tight tracking-tight md:text-4xl">
-                B.S. Computer Science
-                <br />
-                <span className="text-muted-foreground">Bahria University</span>
-              </h3>
-              <p className="mt-2 text-xs uppercase tracking-[0.22em] text-muted-foreground">
-                Graduating June 2026 · Lahore
-              </p>
+            <div className="grid gap-0 md:grid-cols-12">
+              {/* Left — meta */}
+              <div className="border-b border-border p-8 md:col-span-4 md:border-b-0 md:border-r md:p-12">
+                <p className="eyebrow mb-4 text-accent">Internship</p>
+                <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">
+                  July — September 2025
+                </p>
+                <div className="mt-8">
+                  <div className="h-px w-12 bg-accent/40" />
+                </div>
+                <p className="mt-8 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                  Software Productivity Strategists
+                </p>
+              </div>
+
+              {/* Right — content */}
+              <div className="p-8 md:col-span-8 md:p-12">
+                <h3 className="font-display text-3xl leading-tight tracking-tight md:text-4xl">
+                  Web Developer Intern
+                </h3>
+                <p className="mt-8 max-w-lg text-base leading-relaxed text-foreground/80">
+                  Shipped to a live production site in React and Tailwind. Rebuilt
+                  static sections into animated, interactive ones. Applied SEO
+                  practice across the codebase.
+                </p>
+                <div className="mt-10 flex flex-wrap gap-2">
+                  {["React", "Tailwind CSS", "SEO", "Animation"].map((tag) => (
+                    <span
+                      key={tag}
+                      className="border border-border px-3 py-1 text-[0.6rem] uppercase tracking-[0.18em] text-muted-foreground"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
 
-            <div className="mt-10 border-t border-border pt-10">
-              <h3 className="font-display text-2xl leading-tight tracking-tight md:text-3xl">
-                FSc Pre-Engineering
-                <br />
-                <span className="text-muted-foreground">
-                  Government College University (GCU)
-                </span>
-              </h3>
-              <p className="mt-2 text-xs uppercase tracking-[0.22em] text-muted-foreground">
-                July 2021 — July 2023
+// ─── Certificates (3D flip stack) ─────────────────────────────────────────────
+function CertificatesSection() {
+  return (
+    <section className="border-t border-border px-6 py-32 md:px-10 md:py-48">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-16 grid gap-8 md:grid-cols-12">
+          <div className="md:col-span-2">
+            <SectionLabelSwap
+              primary="F — Certificates"
+              secondary="credentials earned."
+            />
+          </div>
+          <div className="md:col-span-5 md:col-start-3">
+            <Reveal>
+              <p className="text-base leading-relaxed text-muted-foreground">
+                Certifications and credentials. More are being added as I complete them.
               </p>
-            </div>
+            </Reveal>
+          </div>
+        </div>
 
-            <p className="mt-10 max-w-md text-sm leading-relaxed text-muted-foreground">
-              <span className="text-foreground">Certification</span> · Full
-              Stack Web Development, NAVTTC, Lahore.
-            </p>
-          </Reveal>
+        <div className="md:grid md:grid-cols-12">
+          <div className="md:col-span-6 md:col-start-3">
+            <Reveal>
+              <CertificateStack />
+            </Reveal>
+          </div>
         </div>
       </div>
     </section>
@@ -345,17 +439,16 @@ function ContactCTA() {
     >
       <div className="mx-auto max-w-7xl">
         <SectionLabelSwap
-          primary="E — Contact"
+          primary="G — Contact"
           secondary="say something."
         />
         <Reveal>
           <Link
             to="/contact"
-            data-cursor="hover"
             className="group mt-10 block"
           >
             <KineticText className="display-hero block leading-[0.92] text-foreground transition-colors duration-500 group-hover:text-accent">
-              Tell me what you're building.
+              Got a project? Let's talk.
             </KineticText>
           </Link>
         </Reveal>
@@ -374,7 +467,6 @@ function ContactCTA() {
             <MagneticButton>
               <Link
                 to="/contact"
-                data-cursor="hover"
                 className="text-foreground transition-colors hover:text-accent"
               >
                 Contact page →
@@ -385,7 +477,6 @@ function ContactCTA() {
                 href="https://www.linkedin.com/in/safi-ur-rehman99"
                 target="_blank"
                 rel="noopener noreferrer"
-                data-cursor="hover"
                 className="text-foreground transition-colors hover:text-accent"
               >
                 LinkedIn ↗
@@ -396,7 +487,6 @@ function ContactCTA() {
                 href="https://github.com/Safi-ur-Rehman99"
                 target="_blank"
                 rel="noopener noreferrer"
-                data-cursor="hover"
                 className="text-foreground transition-colors hover:text-accent"
               >
                 GitHub ↗

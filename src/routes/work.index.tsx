@@ -5,6 +5,7 @@ import SiteNav from "@/components/SiteNav";
 import ExpandingProjectEntries from "@/components/ExpandingProjectEntries";
 import SectionLabelSwap from "@/components/SectionLabelSwap";
 import MagneticButton from "@/components/MagneticButton";
+import KineticText from "@/components/KineticText";
 
 export const Route = createFileRoute("/work/")({
   head: () => ({
@@ -44,8 +45,9 @@ function WorkIndex() {
           </div>
           <div className="md:col-span-10">
             <Reveal>
-              <h1 className="display-hero">
-                The work<span className="text-accent">.</span>
+              <h1 className="display-hero" aria-label="The work.">
+                <KineticText className="inline">The work</KineticText>
+                <span className="text-accent">.</span>
               </h1>
             </Reveal>
             <Reveal delay={0.15}>
